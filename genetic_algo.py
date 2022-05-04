@@ -92,7 +92,8 @@ def genetic_algorithm(fitness_func, V_bounds, pi_bounds, num_itrs, num_pops,
                                0)
             new_generation.append(child)
 
-        print("Generation:{} \tFitness: {}".format(i, populations[0].fitness))
+        print("Generation:{}\tPopulation size: {}\t\tBest Fitness: {} "
+              .format(i, len(populations), populations[0].fitness))
 
         populations = new_generation
 
