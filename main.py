@@ -35,7 +35,7 @@ def objective(env, gamma, alpha, order, num_episodes, V_weights, V_c, pi_weights
                                     weight_values=pi_weights, c_values=pi_c)
     V = ValueApproximationWithFourier(env.observation_space.shape[0], alpha,
                                       order=order, weight_values=V_weights, c_values=V_c)
-    score, rewards = actor_critic(env, gamma, num_episodes, pi, V, env_render=env_render)
+    score = actor_critic(env, gamma, num_episodes, pi, V, env_render=env_render)
     return score
 
 
@@ -60,31 +60,52 @@ def main():
     V_bounds = [[-5, 5] for _ in range(num_features)]
     pi_bounds = [[-5, 5] for _ in range(num_actions * num_features)]
 
-    info = []
-    for num_pops in (5, 15, 25, 50):
+    # info = []
+    for num_pops in (25, 0):
         genetic_kwargs = {
             'num_itrs': 300,
-            'num_pops': num_pops,
+            'num_pops': 25,
             'n_bits_for_weights': 16,
             'n_bits_for_c': rl_kwargs['order'] + 1
         }
         start = time.perf_counter()
         records = genetic_algorithm(objective, V_bounds, pi_bounds,
                                     num_c=num_features * num_states, env=env, **genetic_kwargs, **rl_kwargs)
+    #
+    #     stores_info = {
+    #         'env_name': 'CartPole-v0',
+    #         **genetic_kwargs,
+    #         'records': records,
+    #         'time_used': time.perf_counter() - start
+    #     }
+    #     info.append(stores_info)
+    #
+    # write_json('./results/genetic_results.json', info)
 
-        stores_info = {
-            'env_name': 'CartPole-v0',
-            **genetic_kwargs,
-            'records': records,
-            'time_used': time.perf_counter() - start
-        }
-        info.append(stores_info)
-
-    write_json('./results/genetic_results.json', info)
-
+    # info = []
+    # start = time.perf_counter()
     # pi = PiApproximationWithNN(env.observation_space.shape[0], num_actions, rl_kwargs['alpha'])
     # V = ValueApproximationWithFourier(env.observation_space.shape[0], rl_kwargs['alpha'], rl_kwargs['order'])
-    # actor_critic(env, rl_kwargs['gamma'], rl_kwargs['num_episodes'], pi, V, env_render=rl_kwargs['env_render'])
+    # scores, records = actor_critic(env, rl_kwargs['gamma'], rl_kwargs['num_episodes'], pi, V, env_render=rl_kwargs['env_render'])
+    # stores_info = {
+    #     'env_name': 'CartPole-v0',
+    #     'records': records,
+    #     'time_used': time.perf_counter() - start
+    # }
+    #
+    # info.append(stores_info)
+    #
+    # start = time.perf_counter()
+    # pi = PiApproximationWithNN(env.observation_space.shape[0], num_actions, rl_kwargs['alpha'])
+    # V = ValueApproximationWithFourier(env.observation_space.shape[0], rl_kwargs['alpha'], rl_kwargs['order'])
+    # scores, records = reinforce(env, rl_kwargs['gamma'], rl_kwargs['num_episodes'], pi, V, env_render=rl_kwargs['env_render'])
+    # stores_info = {
+    #     'env_name': 'CartPole-v0',
+    #     'records': records,
+    #     'time_used': time.perf_counter() - start
+    # }
+    # info.append(stores_info)
+    # write_json('./results/nn_results.json', stores_info)
 
 
 if __name__ == '__main__':
