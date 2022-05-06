@@ -82,17 +82,6 @@ class ValueApproximationWithFourier(ValueApproximation):
             v = self.w.matmul(cos)
             return v.item()
 
-    def update(self, s, G):
-        s = torch.tensor([s.flatten()], dtype=torch.float)
-        cos = torch.cos(self.c.matmul(s.t()))
-        v = self.w.matmul(cos)
-        G = torch.tensor([[G]], dtype=torch.float)
-
-        self.optimizer.zero_grad()
-        loss = self.criterion(v, G)
-        loss.backward()
-        self.optimizer.step()
-
 
 if __name__ == '__main__':
     a = [i for i in range(32)]

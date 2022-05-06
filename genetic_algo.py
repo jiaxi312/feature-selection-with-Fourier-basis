@@ -51,6 +51,7 @@ def genetic_algorithm(fitness_func, V_bounds, pi_bounds, num_itrs, num_pops,
     Individual = namedtuple('Individual', ['num_epoch', 'V_w_bitstring', 'V_c_bitstring',
                                            'pi_w_bistring', 'pi_c_bistring', 'fitness'])
 
+    # Create the first generation with random values
     populations = [Individual(0,
                               randint(0, 2, size=n_bits_for_weights * len(V_bounds)),
                               randint(0, 2, size=n_bits_for_c * num_c),
@@ -59,8 +60,12 @@ def genetic_algorithm(fitness_func, V_bounds, pi_bounds, num_itrs, num_pops,
                               0)
                    for _ in range(num_pops)]
 
+    records = []
+    # Perform genetic algorithm
     for i in range(num_itrs):
         populations_with_fitness = []
+
+        # evaluate each individual using the objective function
         for individual in populations:
             V_weights = decode(V_bounds, n_bits_for_weights, individual.V_w_bitstring)
             V_c = bitlist_2_integers(n_bits_for_c, individual.V_c_bitstring)
@@ -95,5 +100,7 @@ def genetic_algorithm(fitness_func, V_bounds, pi_bounds, num_itrs, num_pops,
         print("Generation:{}\tPopulation size: {}\t\tBest Fitness: {} "
               .format(i, len(populations), populations[0].fitness))
 
+        records.append(populations[0].fitness)
         populations = new_generation
 
+    return records

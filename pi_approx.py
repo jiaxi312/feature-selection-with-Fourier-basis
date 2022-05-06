@@ -92,8 +92,3 @@ class PiApproximationWithFourier(PiApproximation):
         action = m.sample()
         return action.item(), m.log_prob(action)
 
-    def update(self, log_prob, gamma_t, delta):
-        loss = -log_prob * gamma_t * delta
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()

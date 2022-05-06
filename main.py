@@ -1,11 +1,11 @@
 import gym
-from pi_approx import PiApproximationWithNN, PiApproximationWithFourier
-from value_approx import ValueApproximationWithNN, ValueApproximationWithFourier
-from rl_algo import actor_critic, reinforce
-from genetic_algo import genetic_algorithm
+import json
+import time
 from env_wrapper import EnvWithExtraRandomStates
-
-num = 1
+from genetic_algo import genetic_algorithm
+from pi_approx import PiApproximationWithNN, PiApproximationWithFourier
+from rl_algo import actor_critic, reinforce
+from value_approx import ValueApproximationWithNN, ValueApproximationWithFourier
 
 
 def objective(env, gamma, alpha, order, num_episodes, V_weights, V_c, pi_weights, pi_c,
@@ -35,15 +35,18 @@ def objective(env, gamma, alpha, order, num_episodes, V_weights, V_c, pi_weights
                                     weight_values=pi_weights, c_values=pi_c)
     V = ValueApproximationWithFourier(env.observation_space.shape[0], alpha,
                                       order=order, weight_values=V_weights, c_values=V_c)
-    score = actor_critic(env, gamma, num_episodes, pi, V, env_render=env_render)
-    global num
-    num += 1
+    score, rewards = actor_critic(env, gamma, num_episodes, pi, V, env_render=env_render)
     return score
 
 
+def write_json(path, data):
+    with open(path, 'w') as f:
+        json.dump(data, f, indent=4)
+
+
 def main():
-    env = EnvWithExtraRandomStates('CartPole-v0')
-    # env = gym.make('CartPole-v0')
+    # env = EnvWithExtraRandomStates('CartPole-v0')
+    env = gym.make('CartPole-v0')
     rl_kwargs = {
         'alpha': 3e-4,
         'gamma': 1.,
@@ -56,13 +59,29 @@ def main():
     num_features = (rl_kwargs['order'] + 1) ** num_states
     V_bounds = [[-5, 5] for _ in range(num_features)]
     pi_bounds = [[-5, 5] for _ in range(num_actions * num_features)]
-    n_iter = 10
-    genetic_algorithm(objective, V_bounds, pi_bounds, n_iter, num_pops=25, n_bits_for_weights=16,
-                      n_bits_for_c=rl_kwargs['order'] + 1,
-                      num_c=num_features * num_states, env=env, **rl_kwargs)
-    print(f'Total number of times rl algo being called: {num}')
-    # print('Done!')
-    # print('Best score: %.2f' % score)
+
+    info = []
+    for num_pops in (5, 15, 25, 50):
+        genetic_kwargs = {
+            'num_itrs': 300,
+            'num_pops': num_pops,
+            'n_bits_for_weights': 16,
+            'n_bits_for_c': rl_kwargs['order'] + 1
+        }
+        start = time.perf_counter()
+        records = genetic_algorithm(objective, V_bounds, pi_bounds,
+                                    num_c=num_features * num_states, env=env, **genetic_kwargs, **rl_kwargs)
+
+        stores_info = {
+            'env_name': 'CartPole-v0',
+            **genetic_kwargs,
+            'records': records,
+            'time_used': time.perf_counter() - start
+        }
+        info.append(stores_info)
+
+    write_json('./results/genetic_results.json', info)
+
     # pi = PiApproximationWithNN(env.observation_space.shape[0], num_actions, rl_kwargs['alpha'])
     # V = ValueApproximationWithFourier(env.observation_space.shape[0], rl_kwargs['alpha'], rl_kwargs['order'])
     # actor_critic(env, rl_kwargs['gamma'], rl_kwargs['num_episodes'], pi, V, env_render=rl_kwargs['env_render'])
