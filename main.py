@@ -31,9 +31,9 @@ def objective(env, gamma, alpha, order, num_episodes, V_weights, V_c, pi_weights
         Returns:
             The average rewards of the learning agent
     """
-    pi = PiApproximationWithFourier(env.observation_space.shape[0], env.action_space.n, alpha, order=order,
+    pi = PiApproximationWithFourier(env.observation_space.shape[0], env.action_space.n, order=order,
                                     weight_values=pi_weights, c_values=pi_c)
-    V = ValueApproximationWithFourier(env.observation_space.shape[0], alpha,
+    V = ValueApproximationWithFourier(env.observation_space.shape[0],
                                       order=order, weight_values=V_weights, c_values=V_c)
     score = actor_critic(env, gamma, num_episodes, pi, V, env_render=env_render)
     return score
@@ -67,8 +67,9 @@ def main():
         'n_bits_for_c': rl_kwargs['order'] + 1
     }
 
-    records = genetic_algorithm(objective, V_bounds, pi_bounds,
-                                num_c=num_features * num_states, env=env, **genetic_kwargs, **rl_kwargs)
+    records, best_individual = genetic_algorithm(objective, V_bounds, pi_bounds,
+                                                 num_c=num_features * num_states, env=env, **genetic_kwargs,
+                                                 **rl_kwargs)
 
 
 if __name__ == '__main__':

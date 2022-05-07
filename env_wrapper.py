@@ -23,6 +23,7 @@ class EnvWithExtraRandomStates:
         self.env.render()
 
     def reset(self):
+        # self.constant_extra_states = self.create_random_arr(self.extra_states, low=-4, high=4)
         states = self.env.reset()
         new_states = self._append_extra_states(states)
         return new_states

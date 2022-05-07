@@ -51,12 +51,11 @@ class PiApproximationWithNN(PiApproximation):
 
 
 class PiApproximationWithFourier(PiApproximation):
-    def __init__(self, num_states, num_actions, alpha, order=1, c_values=None, weight_values=None):
+    def __init__(self, num_states, num_actions, order=1, weight_values=None, c_values=None):
         super(PiApproximationWithFourier, self).__init__()
 
         self.num_states = num_states
         self.num_actions = num_actions
-        self.alpha = alpha
         self.num_features = (order + 1) ** num_states
         self.order = order
 
@@ -64,7 +63,6 @@ class PiApproximationWithFourier(PiApproximation):
         self.w = self._init_w(weight_values)
 
         self.criterion = nn.MSELoss()
-        self.optimizer = torch.optim.SGD([self.w], lr=self.alpha)
         self.softmax = nn.Softmax(dim=0)
 
     def _init_c(self, c_values):
@@ -80,7 +78,8 @@ class PiApproximationWithFourier(PiApproximation):
     def _init_w(self, weight_values):
         w = torch.zeros(self.num_actions, self.num_features, dtype=torch.float, requires_grad=True)
         if weight_values is not None:
-            w = torch.tensor(weight_values, dtype=torch.float, requires_grad=False).view(self.num_actions, self.num_features)
+            w = torch.tensor(weight_values, dtype=torch.float, requires_grad=False).view(self.num_actions,
+                                                                                         self.num_features)
             w = torch.tensor(w.detach(), requires_grad=True)
         return w
 
@@ -91,4 +90,21 @@ class PiApproximationWithFourier(PiApproximation):
         m = Categorical(action_probs)
         action = m.sample()
         return action.item(), m.log_prob(action)
+
+    def __str__(self):
+        states_str = ''.join(['%12d' % i for i in range(self.num_states)] + ['\t\t Weights'])
+        c_str = []
+        for r in range(self.c.shape[0]):
+            c_str.append('C:')
+            for c in range(self.c.shape[1]):
+                c_str.append('\t\t%4.4f' % self.c[r, c].item())
+            c_str.append(f'\t\t{self.w[:,r].detach().numpy()}')
+            c_str.append('\n')
+        c_str = ''.join(c_str)
+        return states_str + '\n' + c_str
+
+
+if __name__ == '__main__':
+    pi = PiApproximationWithFourier(5, 2, 0.1)
+    print(pi)
 

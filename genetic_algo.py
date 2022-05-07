@@ -61,6 +61,7 @@ def genetic_algorithm(fitness_func, V_bounds, pi_bounds, num_itrs, num_pops,
                    for _ in range(num_pops)]
 
     records = []
+    best_individual = None
     # Perform genetic algorithm
     for i in range(num_itrs):
         populations_with_fitness = []
@@ -101,6 +102,12 @@ def genetic_algorithm(fitness_func, V_bounds, pi_bounds, num_itrs, num_pops,
               .format(i, len(populations), populations[0].fitness))
 
         records.append(populations[0].fitness)
+        best_individual = populations[0]
         populations = new_generation
 
-    return records
+    V_weights = decode(V_bounds, n_bits_for_weights, best_individual.V_w_bitstring)
+    V_c = bitlist_2_integers(n_bits_for_c, best_individual.V_c_bitstring)
+    pi_weights = decode(pi_bounds, n_bits_for_weights, best_individual.pi_w_bistring)
+    pi_c = bitlist_2_integers(n_bits_for_c, best_individual.pi_c_bistring)
+
+    return records, [V_weights, V_c, pi_weights, pi_c]
