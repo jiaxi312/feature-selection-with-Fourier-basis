@@ -35,7 +35,7 @@ def objective(env, gamma, alpha, order, num_episodes, V_weights, V_c, pi_weights
                                     weight_values=pi_weights, c_values=pi_c)
     V = ValueApproximationWithFourier(env.observation_space.shape[0],
                                       order=order, weight_values=V_weights, c_values=V_c)
-    score = actor_critic(env, gamma, num_episodes, pi, V, env_render=env_render)
+    score = reinforce(env, gamma, num_episodes, pi, V, env_render=env_render)
     return score
 
 
@@ -45,7 +45,7 @@ def write_json(path, data):
 
 
 def main():
-    # env = EnvWithExtraRandomStates('CartPole-v0')
+    # env = EnvWithExtraRandomStates('CartPole-v0', extra_states=3)
     env = gym.make('CartPole-v0')
     rl_kwargs = {
         'alpha': 3e-4,
@@ -61,7 +61,7 @@ def main():
     pi_bounds = [[-5, 5] for _ in range(num_actions * num_features)]
 
     genetic_kwargs = {
-        'num_itrs': 300,
+        'num_itrs': 200,
         'num_pops': 25,
         'n_bits_for_weights': 16,
         'n_bits_for_c': rl_kwargs['order'] + 1
@@ -70,6 +70,18 @@ def main():
     records, best_individual = genetic_algorithm(objective, V_bounds, pi_bounds,
                                                  num_c=num_features * num_states, env=env, **genetic_kwargs,
                                                  **rl_kwargs)
+
+    V = ValueApproximationWithFourier(num_states, order=rl_kwargs['order'], weight_values=best_individual[0],
+                                      c_values=best_individual[1])
+    pi = PiApproximationWithFourier(num_states, num_actions, order=rl_kwargs['order'], weight_values=best_individual[2],
+                                    c_values=best_individual[3])
+    print('---------------')
+    print(env)
+    print(V)
+    print(pi)
+    # pi = PiApproximationWithNN(num_states, num_actions, alpha=3e-4)
+    # V = ValueApproximationWithNN(num_states, alpha=3e-4)
+    # reinforce(env, rl_kwargs['gamma'], rl_kwargs['num_episodes'], pi, V, rl_kwargs['env_render'])
 
 
 if __name__ == '__main__':

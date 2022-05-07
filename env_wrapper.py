@@ -37,6 +37,9 @@ class EnvWithExtraRandomStates:
         if not self.random_states:
             return np.append(states, self.constant_extra_states)
 
+    def __str__(self):
+        return 'extra states append to the end: ' + str(self.constant_extra_states)
+
     @staticmethod
     def create_random_arr(n, low=0, high=1):
         rand_arr = low + (high - low) * np.random.rand(n)

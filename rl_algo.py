@@ -71,6 +71,7 @@ def reinforce(
         a list that includes the G_0 for every episode.
     """
     total_reward = 0
+    records = []
     for i in range(num_episodes):
         states, actions, rewards, log_probs = generate_episode(env, pi, env_render)
         T = len(rewards) - 1
@@ -81,6 +82,8 @@ def reinforce(
             V.update(s, G)
             pi.update(log_probs[t], gamma ** t, delta)
         total_reward += sum(rewards)
-        # if i % 20 == 0:
-        #     print('Finished %dth episode, G_0=%.2f' % (i, G_values[0]))
+        records.append(sum(rewards))
+        if i % 20 == 1:
+            avg_reward = sum(records[-20:]) / 20
+            print('Finished %dth episode, avg rewards %.2f' % (i, avg_reward))
     return total_reward / num_episodes
