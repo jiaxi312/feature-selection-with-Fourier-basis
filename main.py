@@ -2,7 +2,7 @@ import gym
 import json
 import time
 from env_wrapper import EnvWithExtraRandomStates
-from genetic_algo import genetic_algorithm
+from genetic_algo import classic_genetic_algorithm, modified_genetic_algorithm
 from pi_approx import PiApproximationWithNN, PiApproximationWithFourier
 from rl_algo import actor_critic, reinforce
 from value_approx import ValueApproximationWithNN, ValueApproximationWithFourier
@@ -45,40 +45,54 @@ def write_json(path, data):
 
 
 def main():
-    # env = EnvWithExtraRandomStates('CartPole-v0', extra_states=3)
-    env = gym.make('CartPole-v0')
-    rl_kwargs = {
-        'alpha': 3e-4,
-        'gamma': 1.,
-        'num_episodes': 1,
-        'order': 1,
-        'env_render': False
-    }
-    num_states = env.observation_space.shape[0]
-    num_actions = env.action_space.n
-    num_features = (rl_kwargs['order'] + 1) ** num_states
-    V_bounds = [[-5, 5] for _ in range(num_features)]
-    pi_bounds = [[-5, 5] for _ in range(num_actions * num_features)]
+    stores_info = []
+    for i in [0]:
+        print('----------------------------')
+        env = EnvWithExtraRandomStates('CartPole-v0', extra_states=i)
+        # env = gym.make('CartPole-v0')
+        rl_kwargs = {
+            'alpha': 3e-4,
+            'gamma': 1.,
+            'num_episodes': 1,
+            'order': 1,
+            'env_render': False
+        }
+        num_states = env.observation_space.shape[0]
+        num_actions = env.action_space.n
+        num_features = (rl_kwargs['order'] + 1) ** num_states
+        V_bounds = [[-5, 5] for _ in range(num_features)]
+        pi_bounds = [[-5, 5] for _ in range(num_actions * num_features)]
 
-    genetic_kwargs = {
-        'num_itrs': 200,
-        'num_pops': 25,
-        'n_bits_for_weights': 16,
-        'n_bits_for_c': rl_kwargs['order'] + 1
-    }
+        genetic_kwargs = {
+            'num_itrs': 500,
+            'num_pops': 25,
+            'n_bits_for_weights': 16,
+            'n_bits_for_c': rl_kwargs['order'] + 1
+        }
 
-    records, best_individual = genetic_algorithm(objective, V_bounds, pi_bounds,
-                                                 num_c=num_features * num_states, env=env, **genetic_kwargs,
-                                                 **rl_kwargs)
+        start = time.perf_counter()
 
-    V = ValueApproximationWithFourier(num_states, order=rl_kwargs['order'], weight_values=best_individual[0],
-                                      c_values=best_individual[1])
-    pi = PiApproximationWithFourier(num_states, num_actions, order=rl_kwargs['order'], weight_values=best_individual[2],
-                                    c_values=best_individual[3])
-    print('---------------')
-    print(env)
-    print(V)
-    print(pi)
+        records, best_individual = classic_genetic_algorithm(objective, V_bounds, pi_bounds,
+                                                             num_c=num_features * num_states, env=env, **genetic_kwargs,
+                                                             **rl_kwargs)
+    #     temp = {
+    #         'env_name': 'CartPole-V0',
+    #         **genetic_kwargs,
+    #         'extra_stats': i,
+    #         'records': records,
+    #         'time_used': time.perf_counter() - start
+    #     }
+    #     stores_info.append(temp)
+    #
+    # write_json('./results/genetic_extra_states.json', stores_info)
+    # V = ValueApproximationWithFourier(num_states, order=rl_kwargs['order'], weight_values=best_individual[0],
+    #                                   c_values=best_individual[1])
+    # pi = PiApproximationWithFourier(num_states, num_actions, order=rl_kwargs['order'], weight_values=best_individual[2],
+    #                                 c_values=best_individual[3])
+    # print('---------------')
+    # print(env)
+    # print(V)
+    # print(pi)
     # pi = PiApproximationWithNN(num_states, num_actions, alpha=3e-4)
     # V = ValueApproximationWithNN(num_states, alpha=3e-4)
     # reinforce(env, rl_kwargs['gamma'], rl_kwargs['num_episodes'], pi, V, rl_kwargs['env_render'])

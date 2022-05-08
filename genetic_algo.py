@@ -46,8 +46,8 @@ def evolve(parent1, parent2):
     return child
 
 
-def genetic_algorithm(fitness_func, V_bounds, pi_bounds, num_itrs, num_pops,
-                      n_bits_for_weights, n_bits_for_c, num_c, **kwargs):
+def modified_genetic_algorithm(fitness_func, V_bounds, pi_bounds, num_itrs, num_pops,
+                               n_bits_for_weights, n_bits_for_c, num_c, **kwargs):
     Individual = namedtuple('Individual', ['num_epoch', 'V_w_bitstring', 'V_c_bitstring',
                                            'pi_w_bistring', 'pi_c_bistring', 'fitness'])
 
@@ -104,6 +104,62 @@ def genetic_algorithm(fitness_func, V_bounds, pi_bounds, num_itrs, num_pops,
         records.append(populations[0].fitness)
         best_individual = populations[0]
         populations = new_generation
+
+    V_weights = decode(V_bounds, n_bits_for_weights, best_individual.V_w_bitstring)
+    V_c = bitlist_2_integers(n_bits_for_c, best_individual.V_c_bitstring)
+    pi_weights = decode(pi_bounds, n_bits_for_weights, best_individual.pi_w_bistring)
+    pi_c = bitlist_2_integers(n_bits_for_c, best_individual.pi_c_bistring)
+
+    return records, [V_weights, V_c, pi_weights, pi_c]
+
+
+def classic_genetic_algorithm(fitness_func, V_bounds, pi_bounds, num_itrs, num_pops,
+                              n_bits_for_weights, n_bits_for_c, num_c, **kwargs):
+    Individual = namedtuple('Individual', ['num_epoch', 'V_w_bitstring', 'V_c_bitstring',
+                                           'pi_w_bistring', 'pi_c_bistring', 'fitness'])
+
+    # Create the first generation with random values
+    populations = [Individual(0,
+                              randint(0, 2, size=n_bits_for_weights * len(V_bounds)),
+                              randint(0, 2, size=n_bits_for_c * num_c),
+                              randint(0, 2, size=n_bits_for_weights * len(pi_bounds)),
+                              randint(0, 2, size=n_bits_for_c * num_c),
+                              0)
+                   for _ in range(num_pops)]
+
+    records = []
+    best_individual = None
+
+    # Perform genetic algorithm
+    for i in range(num_itrs):
+        populations_with_fitness = []
+        # evaluate each individual using the objective function
+        for individual in populations:
+            V_weights = decode(V_bounds, n_bits_for_weights, individual.V_w_bitstring)
+            V_c = bitlist_2_integers(n_bits_for_c, individual.V_c_bitstring)
+            pi_weights = decode(pi_bounds, n_bits_for_weights, individual.pi_w_bistring)
+            pi_c = bitlist_2_integers(n_bits_for_c, individual.pi_c_bistring)
+            populations_with_fitness.append(individual._replace(
+                fitness=fitness_func(**kwargs, V_weights=V_weights, V_c=V_c, pi_weights=pi_weights, pi_c=pi_c)))
+
+        populations = populations_with_fitness
+        populations.sort(key=lambda x: x.fitness, reverse=True)
+        populations = populations[:num_pops]
+
+        parent1 = populations[0]
+        parent2 = populations[2]
+        child = Individual(i + 1, evolve(parent1.V_w_bitstring, parent2.V_w_bitstring),
+                           evolve(parent1.V_c_bitstring, parent2.V_c_bitstring),
+                           evolve(parent1.pi_w_bistring, parent2.pi_w_bistring),
+                           evolve(parent1.pi_c_bistring, parent2.pi_c_bistring),
+                           0)
+        populations.append(child)
+
+        print("Generation:{}\tPopulation size: {}\t\tBest Fitness: {} "
+              .format(i, len(populations), populations[0].fitness))
+
+        records.append(populations[0].fitness)
+        best_individual = populations[0]
 
     V_weights = decode(V_bounds, n_bits_for_weights, best_individual.V_w_bitstring)
     V_c = bitlist_2_integers(n_bits_for_c, best_individual.V_c_bitstring)
