@@ -86,4 +86,4 @@ def reinforce(
         if i % 20 == 1:
             avg_reward = sum(records[-20:]) / 20
             print('Finished %dth episode, avg rewards %.2f' % (i, avg_reward))
-    return total_reward / num_episodes
+    return total_reward / num_episodes, records
