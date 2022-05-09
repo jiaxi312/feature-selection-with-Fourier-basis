@@ -44,17 +44,35 @@ def write_json(path, data):
         json.dump(data, f, indent=4)
 
 
-def main():
+def test_gradient_descent():
     stores_info = []
-    for i in [0, 2, 5]:
+    for i in (0, 2, 5):
+        print('---------------------')
+        env = EnvWithExtraRandomStates('MountainCar-v0', extra_states=i)
+        rl_kwargs = {
+            'alpha': 3e-4,
+            'gamma': 1.,
+            'num_episodes': 1000,
+            'env_render': False
+        }
+        num_states = env.observation_space.shape[0]
+        num_actions = env.action_space.n
+        pi = PiApproximationWithNN(num_states, num_actions, rl_kwargs['alpha'])
+        V = ValueApproximationWithNN(num_states, rl_kwargs['alpha'])
+        reinforce(env, pi=pi, V=V, gamma=rl_kwargs['gamma'], num_episodes=rl_kwargs['num_episodes'])
+
+
+def test_genetic_algo():
+    stores_info = []
+    for i in [0]:
         print('----------------------------')
-        env = EnvWithExtraRandomStates('CartPole-v0', extra_states=i)
+        env = EnvWithExtraRandomStates('MountainCar-v0', extra_states=i)
         # env = gym.make('CartPole-v0')
         rl_kwargs = {
             'alpha': 3e-4,
             'gamma': 1.,
             'num_episodes': 1,
-            'order': 1,
+            'order': 8,
             'env_render': False
         }
         num_states = env.observation_space.shape[0]
@@ -81,10 +99,10 @@ def main():
         pi = PiApproximationWithFourier(num_states, num_actions, order=rl_kwargs['order'],
                                         weight_values=best_individual[2],
                                         c_values=best_individual[3])
-        # print('---------------')
-        # print(env)
-        # print(V)
-        # print(pi)
+        print('---------------')
+        print(env)
+        print(V)
+        print(pi)
 
         temp = {
             'env_name': 'CartPole-V0',
@@ -95,7 +113,11 @@ def main():
         }
         stores_info.append(temp)
 
-    write_json('./results/modified_genetic_extra_states.json', stores_info)
+    # write_json('./results/modified_genetic_extra_states.json', stores_info)
+
+
+def main():
+    test_genetic_algo()
     # pi = PiApproximationWithNN(num_states, num_actions, alpha=3e-4)
     # V = ValueApproximationWithNN(num_states, alpha=3e-4)
     # reinforce(env, rl_kwargs['gamma'], rl_kwargs['num_episodes'], pi, V, rl_kwargs['env_render'])
