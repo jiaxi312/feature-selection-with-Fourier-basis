@@ -48,6 +48,24 @@ def evolve(parent1, parent2):
 
 def modified_genetic_algorithm(fitness_func, V_bounds, pi_bounds, num_itrs, num_pops,
                                n_bits_for_weights, n_bits_for_c, num_c, **kwargs):
+    """ Implements the modified genetic algorithm
+
+    In classic GA, a fitness function is used to evaluate the performance for each individual.
+    Individuals are sorted based on fitness, and two best individual will be selected to make an
+    offspring. In the modified version, top 10% of individuals will go to next iteration directly.
+    Then, top 50% of individuals will be selected random to generate the remaining 90% populations.
+
+    Args:
+        fitness_func: a function used to evaluate the goodness of each solution
+        V_bounds: an array of tuple(2) specifies the range for each weights in Value approximation model
+        pi_bounds: an array of tuple(2) specifies the range for each weights in Pi approximation model
+        num_itrs: the number of iterations the GA would run
+        num_pops: the population size
+        n_bits_for_weights: number of bit for weight representation
+        n_bits_for_c: number of bit for C representation
+        num_c: the size of C vector
+    """
+
     Individual = namedtuple('Individual', ['num_epoch', 'V_w_bitstring', 'V_c_bitstring',
                                            'pi_w_bistring', 'pi_c_bistring', 'fitness'])
 
@@ -115,6 +133,22 @@ def modified_genetic_algorithm(fitness_func, V_bounds, pi_bounds, num_itrs, num_
 
 def classic_genetic_algorithm(fitness_func, V_bounds, pi_bounds, num_itrs, num_pops,
                               n_bits_for_weights, n_bits_for_c, num_c, **kwargs):
+    """ Implements the classic genetic algorithm.
+
+        In classic GA, a fitness function is used to evaluate the performance for each individual.
+        Individuals are sorted based on fitness, and two best individual will be selected to make an
+        offspring.
+
+        Args:
+            fitness_func: a function used to evaluate the goodness of each solution
+            V_bounds: an array of tuple(2) specifies the range for each weights in Value approximation model
+            pi_bounds: an array of tuple(2) specifies the range for each weights in Pi approximation model
+            num_itrs: the number of iterations the GA would run
+            num_pops: the population size
+            n_bits_for_weights: number of bit for weight representation
+            n_bits_for_c: number of bit for C representation
+            num_c: the size of C vector
+    """
     Individual = namedtuple('Individual', ['num_epoch', 'V_w_bitstring', 'V_c_bitstring',
                                            'pi_w_bistring', 'pi_c_bistring', 'fitness'])
 
